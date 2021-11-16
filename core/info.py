@@ -8,7 +8,7 @@ class UUIDInfo:
 
     def __init__(self, hash_value: str):
         self.hash_value = hash_value
-        self.uuid = sha256(self.hash_value).hexdigest()
+        self.uuid = sha256(self.hash_value.encode('utf-8')).hexdigest()
 
 
 class ConnectInfo(UUIDInfo):

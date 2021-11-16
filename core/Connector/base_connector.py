@@ -20,12 +20,13 @@ class BaseConnector(Thread):
             if self.commands_queue.empty():
                 continue
 
-            command = self.commands_queue.get()
+            record_uuid, command = self.commands_queue.get()
             if command is None:
                 break
 
+            print(self.__class__.__name__, 'run')
             r = self.send(command)
-            self.results_queue.put((self.task_tag, r))
+            self.results_queue.put((record_uuid, r))
 
     def send(self, command: CommandInfo, **kwargs) -> ResultInfo:
         option_map = command.option_map()
