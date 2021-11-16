@@ -67,16 +67,19 @@ class MyTestCase(unittest.TestCase):
 
         while True:
             cur = datetime.datetime.now()
-            if (cur - start).seconds >= 30:
+            if (cur - start).seconds >= 10:
                 print('超时')
                 break
 
-            if rst_queue.empty():
-                continue
+            while not rst_queue.empty():
+                record_uuid, result_info = rst_queue.get()
+                # 根据record_uuid 获取对应record
 
-            record_uuid, result_info = rst_queue.get()
-            print(record_uuid)
-            print(result_info.category.name, result_info.data)
+                # 根据结果状态，确认下一步处理
+                # 异常，进入重试
+                # record.result_process()
+                print(record_uuid)
+                print(result_info.category.name, result_info.data)
 
         print('End')
 

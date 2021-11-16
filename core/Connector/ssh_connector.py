@@ -21,6 +21,7 @@ class SSHConnector(BaseConnector):
 
     def auto(self):
         if not self.is_auto:
+            print('login')
             self.client.connect(hostname=self.cnt_info.host, port=self.cnt_info.port,
                                 username=self.cnt_info.username, password=self.cnt_info.password)
 
