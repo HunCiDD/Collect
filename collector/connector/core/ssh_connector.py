@@ -1,10 +1,9 @@
 
 import paramiko
 from queue import Queue
-from threading import Thread
 
-from ..info import *
-from .base_connector import BaseConnector
+from collector.info import *
+from collector.connector.core.base_connector import BaseConnector
 
 
 class SSHConnector(BaseConnector):
