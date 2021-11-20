@@ -1,5 +1,5 @@
 
-
+from typing import Any
 from hashlib import sha256
 from enum import Enum
 
@@ -46,24 +46,13 @@ class ConnectInfo(UUIDInfo):
         return self._password
 
 
-# 命令枚举类型
-class EnumCMDCategory(Enum):
-    AUTH = 1
-    BASE = 2
-    FILE = 3
-    OTHER = -1
-
-
-EnumCMDCategoryList = [i for i, _ in EnumCMDCategory.__members__.items()]
-
-
 # 命令信息
 class CommandInfo(UUIDInfo):
     OPTION_START_TAG = '#['
     OPTION_END_TAG = ']'
 
     def __init__(self, index: str = '0',
-                 category: EnumCMDCategory = EnumCMDCategory.BASE,
+                 category: str = '',
                  option: str = '',
                  content: str = '',
                  params: dict = None):
@@ -122,32 +111,23 @@ class CommandInfo(UUIDInfo):
         return option
 
 
-
-
-
-class CommandInfo(UUIDInfo):
-    def __init__(self, category: CMDCategory = CMDCategory.BASE,
-                 option: str = '', content: str = '', params: dict = None):
-        self.category = category
-        self.option = option
-        self.content = content
-        self.params = params
-        if self.params is None:
-            self.params = {}
-        super().__init__(f'{self.content}:{self.params}')
-
-    def option_map(self):
-        return self.option
-
-
 class PtlCategory(Enum):
-    BASE = 1
-    HTTP = 1
-    SSH = 2
+    OTHER = 0
+    LOCAL_FILE = 1
+    HTTP = 11
+    HTTPS = 12
+    SSH = 13
+    TELNET = 14
+    SNMP = 15
+    MML = 16
+    CLIENT_T_QUERY = 51
+
+
+PtlCategoryList = [i for i, _ in PtlCategory.__members__.items()]
 
 
 class ProtocolInfo(UUIDInfo):
-    def __init__(self, category: PtlCategory = PtlCategory.BASE,
+    def __init__(self, category: PtlCategory = PtlCategory.OTHER,
                  name: str = '', version: str = ''):
         self.category = category
         self.name = name
@@ -157,7 +137,16 @@ class ProtocolInfo(UUIDInfo):
 
 class DevCategory(Enum):
     HOST = 1
-    SWITCH = 2
+    SWITCH = 31
+    ROUTE = 32
+    FIREWALL = 41
+    STORAGE = 42
+    DOCKER = 51
+    OTHER = 61
+    PLATFORM = 21
+
+
+DevCategoryList = [i for i, _ in DevCategory.__members__.items()]
 
 
 class DeviceInfo(UUIDInfo):
@@ -175,9 +164,17 @@ class RstCategory(Enum):
     ABNORMAL = 3
 
 
+RstCategoryList = [i for i, _ in RstCategory.__members__.items()]
+
+
 class ResultInfo:
     def __init__(self, category: RstCategory = RstCategory.FAILED,
-                 data=None):
+                 code: int = 0, msg: str = '', data: Any = None):
         self.category = category
+        self.code = code
+        self.msg = msg
         self.data = data
 
+    @property
+    def err_msg(self):
+        return f'{self.category.name}[{self.code}]:{self.msg}'
