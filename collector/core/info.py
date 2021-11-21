@@ -135,29 +135,6 @@ class ProtocolInfo(UUIDInfo):
         super().__init__(f'{self.name}:{self.version}')
 
 
-class DevCategory(Enum):
-    HOST = 1
-    SWITCH = 31
-    ROUTE = 32
-    FIREWALL = 41
-    STORAGE = 42
-    DOCKER = 51
-    OTHER = 61
-    PLATFORM = 21
-
-
-DevCategoryList = [i for i, _ in DevCategory.__members__.items()]
-
-
-class DeviceInfo(UUIDInfo):
-    def __init__(self, category: DevCategory = DevCategory.HOST,
-                 name: str = '', version: str = ''):
-        self.category = category
-        self.name = name
-        self.version = version
-        super().__init__(f'{self.name}:{self.version}')
-
-
 class RstCategory(Enum):
     SUCCESS = 1
     FAILED = 2
