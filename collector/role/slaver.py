@@ -2,30 +2,33 @@ import time
 from queue import Queue
 from threading import Thread
 
-from collector.record import Record
-from ..util.logger import log
+from ..task.record import TaskRecord
+
+from ..utils.logger import log
 
 
-class CollectSlaver(Thread):
+class TaskRecordSlaver(Thread):
     # 采集奴隶
-    def __init__(self, tag: str, queue_tasks: Queue = None,
+    def __init__(self, tag: str, queue_task_records: Queue = None,
                  queue_results: Queue = None, **kwargs):
         super().__init__()
         self.tag = tag
-        self.queue_tasks = queue_tasks
+        self.queue_task_records = queue_task_records
         self.queue_results = queue_results
 
     def run(self, ) -> None:
         while True:
-            if self.queue_tasks.empty():
+            if self.queue_task_records.empty():
                 continue
-            record = self.queue_tasks.get()
-            if record is None:
-                log(self, f'None, Cur Connector End')
-                break
+            task_flow_id, record = self.queue_task_records.get()
 
-            if not isinstance(record, Record):
-                break
+            if not isinstance(record, TaskRecord):
+                continue
+            rst_info = record.run()
+            self.queue_results.put(task_flow_id, record.uuid)
 
-            self.queue_results.put(record.run())
-            time.sleep(0.2)
+
+
+
+class TaskFlowSlaver(Thread):
+    pass

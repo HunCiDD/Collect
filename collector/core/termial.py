@@ -28,7 +28,7 @@ class Terminal(UUIDInfo):
         self.version = version
         self._category = self.__class__.__name__
         self.kwargs = kwargs
-        super().__init__(f'{self._category}:{self.version}')
+        super().__init__(f'{self._category}:{self.name}:{self.version}')
 
     @property
     def category(self):

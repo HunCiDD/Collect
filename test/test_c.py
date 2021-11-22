@@ -1,9 +1,8 @@
 import unittest
-from core.info import *
-from core.record import Record
-from core.Connector.ssh_connector import SSHConnector
+from collector.core.info import *
+from collector.task.record import Record
+from collector.core import SSHConnector
 from queue import Queue
-import pandas as pd
 import datetime
 
 

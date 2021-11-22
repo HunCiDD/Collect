@@ -2,8 +2,8 @@ from typing import List
 import datetime
 import pandas as pd
 from queue import Queue
-from collector.record import Record
-from ..core.terminal import MAP_TERMINAL
+from collector.task.record import Record
+from collector.core import MAP_TERMINAL
 from ..devices.platform_dv.terminal import PlatformDV
 from .slaver import CollectSlaver
 from ..util.logger import log

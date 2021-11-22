@@ -1,5 +1,33 @@
-from collector.info import CommandInfo
-from collector.info import ResultInfo
+
+from ...task.handler import Handler
+
+
+class ConfConvertHandler(Handler):
+    def __init__(self, task_conf: list = None, *args, **kwargs):
+        super(ConfConvertHandler, self).__init__(*args, **kwargs)
+        self.task_conf = task_conf
+
+    def run(self):
+        pass
+
+
+
+class SetRecordsHandler(Handler):
+
+
+
+
+
+class CMDContentLimiterHandler(Handler):
+
+    def run(self, request: CommandInfo):
+        command_info = request
+        if not isinstance(command_info, CommandInfo):
+            return request
+
+
+from collector.core.info import CommandInfo
+from collector.core.info import ResultInfo
 
 
 class CMDHandler:
