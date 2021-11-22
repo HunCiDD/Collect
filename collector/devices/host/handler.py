@@ -1,4 +1,5 @@
 
+
 from ...task.handler import Handler
 
 
@@ -11,9 +12,13 @@ class ConfConvertHandler(Handler):
         pass
 
 
-
 class SetRecordsHandler(Handler):
+    def __init__(self, task_conf: list = None, *args, ** kwargs):
+        super(SetRecordsHandler, self).__init__(*args, **kwargs)
+        self.task_conf = task_conf
 
+    def run(self):
+        pass
 
 
 

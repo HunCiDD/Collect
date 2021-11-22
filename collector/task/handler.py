@@ -15,7 +15,6 @@ class Handler:
         self.args = args
         self.kwargs = kwargs
         self.status = HandlerStatus.FAILED
-        self.response = None
 
     def run(self):
         pass
@@ -29,16 +28,3 @@ class WaitHandler(Handler):
     def run(self):
         self.response = datetime.datetime.now()
         self.status = HandlerStatus.SUCCESS
-
-
-class PutRecordHandler(Handler):
-
-    def __init__(self, record: TaskRecord, tag: str, queue_records: Queue, **kwargs):
-        self.record = record
-        self.tag = tag
-        self.queue_records = queue_records
-
-
-    def run(self):
-        self.
-
