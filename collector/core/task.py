@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Optional
 from queue import Queue
-
+import datetime
 from collector.core.info import UUIDInfo
 from collector.core.info import ConnectInfo
 from collector.core.info import CommandInfo
@@ -51,7 +51,7 @@ class TaskRecord(UUIDInfo):
             connector = self.connector_cls(self.connect_info,
                                            version=self.terminal.version)
             # 发送命令执行，获取执行结果
-            self._result_info = connector.send(self.command_info)
+            self._result_info = connector.send_cmd(self.command_info)
         else:
             log(self, f'Command jump', level='info')
         return self._result_info
@@ -97,7 +97,85 @@ class TaskFLow:
 
     def run(self):
         log(self, 'Run...')
+        if self.cur_handler is None and self.status == TaskFlowStatus.New:
+            self.status = TaskFlowStatus.Running
+
         while True:
+
+            if self.queue_handlers.empty():
+                if self.cur_handler is None:
+                    log(self, 'Queue Handler Empty, So End...')
+                    self.status = TaskFlowStatus.Exit
+                    break
+                elif self.cur_handler.status in [TaskHandlerStatus.SUCCESS, TaskHandlerStatus.FAILED]:
+                    self.status = TaskFlowStatus.Exit
+                    break
+                elif self.cur_handler.status == TaskHandlerStatus.BLOCKING:
+                    self.status = TaskFlowStatus.Blocking
+            else:
+                self.cur_handler = self.queue_handlers.get()
+
+
+
+
+            if self.status == TaskFlowStatus.New:
+                if self.queue_handlers.empty():
+                    log(self, 'Queue Handler Empty, So End...')
+                    self.status = TaskFlowStatus.Exit
+                    break
+                else:
+                    cur_handler = self.queue_handlers.get()
+                    self.cur_handler = cur_handler
+                    cur_handler.run()
+                    self.status = TaskFlowStatus.Running
+            elif self.status == TaskFlowStatus.Running:
+                if self.queue_handlers.empty():
+                    if self.cur_handler.status in [TaskHandlerStatus.SUCCESS,
+                                                   TaskHandlerStatus.FAILED]:
+                        log(self, 'Queue Handler Empty, So End...')
+                        self.status = TaskFlowStatus.Exit
+                        break
+                    elif self.cur_handler.status == TaskHandlerStatus.ABNORMAL:
+                        if self.cur_handler.run_num > 3:
+                            self.status = TaskFlowStatus.Exit
+                            break
+                        else:
+                            cur_handler = self.cur_handler
+                    else:
+
+
+                else:
+                    pass
+            elif self.status == TaskFlowStatus.Blocking:
+                # 校验时间是否满足
+                datetime_cur = datetime.datetime.now()
+                if datetime_cur - self.wait_start_time
+                pass
+
+
+
+            if self.queue_handlers.empty():
+                if self.cur_handler.status in [TaskHandlerStatus.SUCCESS,
+                                               TaskHandlerStatus.FAILED]:
+                    log(self, 'Queue Handler Empty, So End...')
+                    self.status = TaskFlowStatus.Exit
+                    break
+                elif self.cur_handler.status == TaskHandlerStatus.BLOCKING:
+
+
+
+
+            if self.status == TaskFlowStatus.New:
+                if self.queue_handlers.empty():
+                    log(self, 'Queue Handler Empty, So End...')
+                    self.status = TaskFlowStatus.Exit
+                    break
+            elif self.status == TaskFlowStatus.Running:
+                if self.queue_handlers.empty():
+
+
+
+
             if self.queue_handlers.empty():
                 log(self, 'Queue Handler Empty, So End...')
                 self.status = TaskFlowStatus.Exit
@@ -105,8 +183,7 @@ class TaskFLow:
             # 刚开始
             if self.cur_handler is None and self.status == TaskFlowStatus.New:
                 self.status = TaskFlowStatus.Running
-                # 从队列中获取一个新的
-
+            # 从队列中获取一个新的
             cur_handler = self.queue_handlers.get()
             if not isinstance(cur_handler, TaskHandler):
                 logs = f'Your cls[{cur_handler.__class__.__name__}] is ' \
@@ -119,6 +196,7 @@ class TaskFLow:
             elif cur_handler.status == TaskHandlerStatus.FAILED:
                 logs = f'Your cls[{cur_handler.__class__.__name__}] is FAILED.'
                 log(self, logs, level='warning')
+                self.status = TaskFlowStatus.Exit
                 break
             elif cur_handler.status == TaskHandlerStatus.BLOCKING:
                 self.wait_time = 0.1
@@ -127,3 +205,4 @@ class TaskFLow:
                 break
             else:
                 pass
+

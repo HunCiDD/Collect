@@ -2,7 +2,7 @@ from typing import Any
 import datetime
 from queue import Queue
 
-from ..core.flow import TaskFLow
+from ..core.task import TaskFLow
 from .slaver import FlowSlaver
 from .slaver import RecordSlaver
 
@@ -42,8 +42,7 @@ class Master:
         for i in range(max_slaver_flow):
             thread = FlowSlaver(
                 f'FlowSlaver{i}', map_queues=self.map_queues,
-                map_records=self.map_records,
-                size_exit_flows=self.size_exit_flows
+                map_records=self.map_records
             )
             thread.daemon = True
             thread.start()

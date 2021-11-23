@@ -3,8 +3,8 @@ from typing import List
 from queue import Queue
 from threading import Thread
 
-from ..core.record import TaskRecord
-from ..core.flow import TaskFlowStatus
+from ..core.task import TaskRecord
+from ..core.task import TaskFlowStatus
 from ..util.logger import log
 
 
@@ -43,24 +43,23 @@ class FlowSlaver(Slaver):
 
 class RecordSlaver(Slaver):
     # 采集奴隶
-    def __init__(self, tag: str, queue_record: Queue = None,
-                 queue_cnt_rst: Queue = None, **kwargs):
-        super().__init__(tag)
-        self.tag = tag
-        self.queue_record = queue_record
-        self.queue_cnt_rst = queue_cnt_rst
+    def __init__(self, slaver_tag: str, map_queues: dict = None,
+                 *args, **kwargs):
+        super().__init__(slaver_tag)
+        self.queue_records = map_queues.get('records', None)
+        self.queue_results = map_queues.get('results', None)
 
     def run(self, ) -> None:
         while True:
-            if self.queue_record.empty():
+            if self.queue_records.empty():
                 continue
-            record = self.queue_record.get()
+            flow_tag, record = self.queue_records.get()
             if record is None:
                 log(self, f'None, Cur Connector End')
                 break
 
             if not isinstance(record, TaskRecord):
                 break
-
-            self.queue_cnt_rst.put(record.run())
+            record.run()
+            self.queue_results.put((flow_tag, record))
             time.sleep(0.2)
