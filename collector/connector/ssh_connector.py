@@ -1,24 +1,27 @@
 
 import paramiko
 
-from collector.core.info import *
-from collector.core.connector.base_connector import BaseConnector
+from ..core.info import ConnectInfo
+from ..core.info import CommandInfo
+from ..core.info import RstCategory
+from ..core.info import ResultInfo
+from ..connector.base_connector import BaseConnector
 
 
 class SSHConnector(BaseConnector):
 
     def __init__(self, connect_info: ConnectInfo, **kwargs):
         super().__init__(connect_info, **kwargs)
-        self.is_auto = False
+        self.is_auth = False
         self.client = paramiko.SSHClient()
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.auto()
+        self.auth()
 
     def __del__(self):
         self.client.close()
 
-    def auto(self):
-        if not self.is_auto:
+    def auth(self):
+        if not self.is_auth:
             print('login')
             self.client.connect(hostname=self.connect_info.host_name,
                                 port=self.connect_info.port,

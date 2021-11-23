@@ -1,5 +1,5 @@
 
-from ...task.flow import TaskFLow
+from collector.core.flow import TaskFLow
 
 
 

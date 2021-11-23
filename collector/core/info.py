@@ -1,4 +1,4 @@
-
+import copy
 from typing import Any
 from hashlib import sha256
 from enum import Enum
@@ -109,6 +109,12 @@ class CommandInfo(UUIDInfo):
         else:
             option = ''
         return option
+
+    @property
+    def kwargs(self):
+        dict_tmp = copy.deepcopy(self.params)
+        dict_tmp['content'] = self.content
+        return dict_tmp
 
 
 class PtlCategory(Enum):

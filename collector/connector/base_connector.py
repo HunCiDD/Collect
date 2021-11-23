@@ -1,10 +1,10 @@
 from threading import Lock
 
-from collector.core.info import CommandInfo
-from collector.core.info import ConnectInfo
-from collector.core.info import ResultInfo
+from ..core.info import CommandInfo
+from ..core.info import ConnectInfo
+from ..core.info import ResultInfo
 
-from collector.utils.logger import log
+from ..util.logger import log
 
 
 class BaseConnector:
@@ -28,7 +28,7 @@ class BaseConnector:
 
     def __init__(self, connect_info: ConnectInfo, *args, **kwargs):
         self.connect_info = connect_info
-        self.is_auto = False
+        self.is_auth = False
         self.client = None
 
     def send_cmd(self, command_info: CommandInfo, **kwargs) -> ResultInfo:

@@ -1,6 +1,6 @@
 import unittest
 from collector.core.info import *
-from collector.task.record import Record
+from collector.core.record import Record
 from collector.core import SSHConnector
 from queue import Queue
 import datetime

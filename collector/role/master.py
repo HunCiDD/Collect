@@ -1,78 +1,70 @@
-from typing import List
+from typing import Any
 import datetime
-import pandas as pd
 from queue import Queue
-from collector.task.record import Record
-from collector.core import MAP_TERMINAL
-from ..devices.platform_dv.terminal import PlatformDV
-from .slaver import CollectSlaver
+
+from ..core.flow import TaskFLow
+from .slaver import FlowSlaver
+from .slaver import RecordSlaver
+
 from ..util.logger import log
-MAP_TERMINAL.update({EnumDeviceCategory.PLATFORM_DV.name: PlatformDV})
 
 
-class CollectMaster:
-    DEFAULT_MAX_SLAVER = 10
+class Master:
+    DEFAULT_MAX_SLAVER_FLOW = 3
+    DEFAULT_MAX_SLAVER_RECORD = 6
     DEFAULT_MAX_TIMEOUT = 300
 
-    def __init__(self, records: List[Record] = None, timeout: int = 600,
-                 **kwargs):
-        if records is None:
-            self.list_records = []
-        else:
-            self.list_records = records
+    def __init__(self, map_queues, timeout: int = 600, **kwargs):
+        self.map_queues = map_queues
+        self.size_flows = 0
+        self.size_exit_flows = 0
+        self.size_records = 0
         self.map_records = {}
-        self.df_records_tag = None
-        self.queue_results = Queue(200)
-        self.queue_records = Queue(len(self.list_records))
         self.timeout = timeout                              # 超时设置
-        self.records_size = 0
         self.start_time = datetime.datetime.now()
 
+    def add_flow(self, flow: TaskFLow):
+        if isinstance(flow, TaskFLow):
+            self.map_queues['flows'].put(flow)
+
     def run(self):
-        self.tag_records()
-        self.run_records()
-        self.watch_records()
+        self.run_slaver_flow()
+        self.run_slaver_record()
+        self.watch()
 
-    def tag_records(self):
-        list_tmp = []
-        for i, record in enumerate(self.list_records):
-            list_tmp.append({
-                'uuid': record.uuid, 'index': i,
-                'command_info_category': record.command_info.category.name,
-                'device_info_category': record.device_info.category.name,
-                'connect_info_uuid': record.connect_info.uuid,
-                'protocol_info_uuid': record.protocol_info.uuid,
-                'protocol_info_category': record.protocol_info.category.name
-            })
-        self.df_records_tag = pd.DataFrame(list_tmp)
-
-    # 运行 records
-    def run_records(self):
-        self.records_size = len(self.list_records)
-        for record in self.list_records:
-            self.queue_records.put(record)
-
-        for i in range(self.DEFAULT_MAX_SLAVER):
-            thread = CollectSlaver(tag=str(i),
-                                   queue_tasks=self.queue_records,
-                                   queue_results=self.queue_results)
+    # 创建多线程处理flow
+    def run_slaver_flow(self):
+        self.size_flows = self.map_queues['flows'].qsize()
+        if self.size_flows < self.DEFAULT_MAX_SLAVER_FLOW:
+            max_slaver_flow = self.size_flows
+        else:
+            max_slaver_flow = self.DEFAULT_MAX_SLAVER_FLOW
+        for i in range(max_slaver_flow):
+            thread = FlowSlaver(
+                f'FlowSlaver{i}', map_queues=self.map_queues,
+                map_records=self.map_records,
+                size_exit_flows=self.size_exit_flows
+            )
             thread.daemon = True
             thread.start()
 
-    def watch_records(self):
-        cur_records = 0
+    # 创建多线程处理record
+    def run_slaver_record(self):
+        for i in range(self.DEFAULT_MAX_SLAVER_RECORD):
+            thread = RecordSlaver(
+                f'FlowSlaver{i}', map_queues=self.map_queues,
+                map_records=self.map_records
+            )
+            thread.daemon = True
+            thread.start()
+
+    def watch(self):
         while True:
             cur_time = datetime.datetime.now()
-            if (cur_time - self.start_time).seconds >= 30:
-                log(self, f'超时....')
+            if (cur_time - self.start_time).seconds >= self.timeout:
+                log(self, f'超时退出....')
                 break
 
-            while not self.queue_results.empty():
-                record_uuid, expectations = self.queue_results.get()
-                cur_records += 1
-                new_size = self.handler_expectations(record_uuid, expectations)
-                self.records_size += new_size
-
-            if cur_records >= self.records_size:
-                print('全部完成。。。。。')
+            if self.size_exit_flows == self.size_flows:
+                log(self, f'全部完成...退出')
                 break
